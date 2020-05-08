@@ -11,7 +11,6 @@ import fs2.io.tcp.Socket
 import java.nio.charset.Charset
 
 class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
-  private val charset = Charset.forName("UTF-8")
 
   private def handleClient(state: State[F], fish: Fish[F]): Stream[F, Unit] =
     fish.socket
@@ -20,7 +19,7 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
       .through(text.lines)
       .evalMap { line =>
         val message = s"[${fish.name}] $line\n"
-        state.broadcast(message.getBytes(charset))
+        state.broadcast(message)
       }
 
   def `don't care`(throwable: Throwable): Stream[F, Nothing] =
