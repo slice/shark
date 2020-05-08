@@ -17,6 +17,7 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
       .reads(8192)
       .through(text.utf8Decode)
       .through(text.lines)
+      .filter(_.trim != "")
       .evalMap { line =>
         val message = s"[${fish.name}] $line\n"
         state.broadcast(message)
