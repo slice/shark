@@ -41,7 +41,7 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
       state  <- Stream.eval(State.make)
       socket <- socketGroup.server(new InetSocketAddress(3333))
     } yield for {
-      client <- Stream.resource(socket).handleErrorWith(`don't care`)
+      client <- Stream.resource(socket)
       fish <-
         Stream
           .bracket(Fish.make[F](client).flatTap(state.add))(fish =>
@@ -53,7 +53,7 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
       _ <- Stream.eval(
         state.broadcast(Colors.blue(s"[server] ${fish.name} has connected\n")),
       )
-      _ <- handleClient(state, fish)
+      _ <- handleClient(state, fish).handleErrorWith(`don't care`)
     } yield ()).parJoin(1024)
 
   def run: F[Unit] =
