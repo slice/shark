@@ -8,7 +8,7 @@ import java.util.UUID
 
 case class Fish[F[_]](id: UUID, socket: Socket[F]) {
   def name: String = {
-    def pick[A](as: Seq[A]) = as(id.hashCode % (as.size - 1))
+    def pick[A](as: Seq[A]) = as(id.hashCode.abs % (as.size - 1))
 
     val adjective = pick(Fish.adjectives)
     val noun      = pick(Fish.nouns)
