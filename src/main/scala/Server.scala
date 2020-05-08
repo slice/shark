@@ -38,7 +38,11 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
       client <- Stream.resource(socket).handleErrorWith(`don't care`)
       fish <-
         Stream
-          .bracket(Fish.make[F](client).flatTap(state.add))(state.remove)
+          .bracket(Fish.make[F](client).flatTap(state.add))(fish =>
+            state.remove(fish) *> state
+              .broadcast(s"@@@ [${fish.name}] has disconnected\n"),
+          )
+      _ <- Stream.eval(state.broadcast(s"@@@ [${fish.name}] has connected\n"))
       _ <- handleClient(state, fish)
     } yield ()).parJoin(1024)
 
