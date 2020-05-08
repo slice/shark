@@ -11,16 +11,21 @@ import fs2.io.tcp.Socket
 import java.nio.charset.Charset
 
 class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
-
   private def handleClient(state: State[F], fish: Fish[F]): Stream[F, Unit] =
     fish.socket
       .reads(8192)
       .through(text.utf8Decode)
       .through(text.lines)
       .filter(_.trim != "")
-      .evalMap { line =>
-        val message = s"[${fish.name}] $line\n"
-        state.broadcast(message)
+      .evalMap {
+        case "/list" =>
+          state.ref.get.flatMap { map =>
+            val listing = map.values.map(_.name) mkString ", "
+            val message = s"@@@ users (${map.size}): $listing\n"
+            fish.send(message)
+          }
+        case message =>
+          state.broadcast(s"[${fish.name}] $message\n")
       }
 
   def `don't care`(throwable: Throwable): Stream[F, Nothing] =
