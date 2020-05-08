@@ -52,3 +52,7 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
       stream(socketGroup).compile.drain
     }
 }
+
+object Server {
+  val charset = Charset.forName("UTF-8")
+}

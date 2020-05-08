@@ -5,6 +5,7 @@ import cats.implicits._
 import fs2.io.tcp.Socket
 
 import java.util.UUID
+import fs2.Chunk
 
 case class Fish[F[_]](id: UUID, socket: Socket[F]) {
   def name: String = {
@@ -13,6 +14,10 @@ case class Fish[F[_]](id: UUID, socket: Socket[F]) {
     val adjective = pick(Fish.adjectives)
     val noun      = pick(Fish.nouns)
     s"${adjective} ${noun}"
+  }
+
+  def send(message: String): F[Unit] = {
+    socket.write(Chunk.bytes(message.getBytes(Server.charset)))
   }
 }
 
