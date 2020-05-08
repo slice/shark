@@ -21,8 +21,8 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
         case "/list" =>
           state.ref.get.flatMap { map =>
             val listing = map.values.map(_.name) mkString ", "
-            val message = s"@@@ users (${map.size}): $listing\n"
-            fish.send(message)
+            val message = s"[server] users (${map.size}): $listing\n"
+            fish.send(Colors.green(message))
           }
         case message =>
           state.broadcast(s"[${fish.name}] $message\n")
@@ -46,9 +46,13 @@ class Server[F[_]: Concurrent: ContextShift](blocker: Blocker) {
         Stream
           .bracket(Fish.make[F](client).flatTap(state.add))(fish =>
             state.remove(fish) *> state
-              .broadcast(s"@@@ [${fish.name}] has disconnected\n"),
+              .broadcast(
+                Colors.blue(s"[server] ${fish.name} has disconnected\n"),
+              ),
           )
-      _ <- Stream.eval(state.broadcast(s"@@@ [${fish.name}] has connected\n"))
+      _ <- Stream.eval(
+        state.broadcast(Colors.blue(s"[server] ${fish.name} has connected\n")),
+      )
       _ <- handleClient(state, fish)
     } yield ()).parJoin(1024)
 
