@@ -1,5 +1,7 @@
-.bloop
-.metals
+/.bloop
+/.bsp
+/.metals
 target
+
 .DS_Store
 .vscode

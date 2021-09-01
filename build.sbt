@@ -1,4 +1,5 @@
-scalaVersion := "2.13.2"
+ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / organization := "zone.slice"
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core"   % "2.1.1",
