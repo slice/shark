@@ -51,17 +51,21 @@ class Server[F[_]: Async: Console: Network] {
       }
 
   def run: F[Unit] =
-    Stream.eval(State.make).flatMap { state => 
-      Network[F]
-        .server(port = port"3333".some)
-        .map { socket =>
-          for {
-            fish <- Stream.resource(createFish(state, socket))
-            _    <- handleFish(state, fish).handleErrorWith(whoops(_))
-          } yield ()
-        }
-        .parJoin(1024)
-    }.compile.drain
+    Stream
+      .eval(State.make)
+      .flatMap { state =>
+        Network[F]
+          .server(port = port"3333".some)
+          .map { socket =>
+            for {
+              fish <- Stream.resource(createFish(state, socket))
+              _    <- handleFish(state, fish).handleErrorWith(whoops(_))
+            } yield ()
+          }
+          .parJoin(1024)
+      }
+      .compile
+      .drain
 }
 
 object Server {
