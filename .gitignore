@@ -1,7 +1,9 @@
-/.bloop
-/.bsp
-/.metals
+.bloop
+.bsp
+.metals
 target
+project/project
+project/metals.sbt
 
 .DS_Store
 .vscode

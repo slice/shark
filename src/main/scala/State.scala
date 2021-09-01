@@ -1,25 +1,27 @@
 package zone.slice.shark
 
-import cats._
-import cats.effect._
-import cats.implicits._
-import cats.effect.concurrent.Ref
+import cats.Monad
+import cats.effect.Sync
+import cats.syntax.all._
+import cats.effect.Ref
 
 import java.util.UUID
 import fs2.Chunk
 
 case class State[F[_]: Monad](ref: Ref[F, Map[UUID, Fish[F]]]) {
   def add(fish: Fish[F]): F[Unit] =
-    ref.update(map => map + (fish.id -> fish))
+    ref.update(_ + (fish.id -> fish))
+
   def remove(fish: Fish[F]): F[Unit] =
-    ref.update(map => map - fish.id)
+    ref.update(_ - fish.id)
+
   def broadcast(message: String): F[Unit] =
-    ref.get.flatMap { map =>
-      map.values.toVector
+    ref.get.flatMap(
+      _.values.toVector
         .traverse_(
-          _.socket.write(Chunk.bytes(message.getBytes(Server.charset))),
-        )
-    }
+          _.socket.write(Chunk.array(message.getBytes(Server.charset))),
+        ),
+    )
 }
 
 object State {

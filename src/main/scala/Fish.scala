@@ -1,10 +1,11 @@
 package zone.slice.shark
 
-import cats.effect._
-import cats.implicits._
-import fs2.io.tcp.Socket
+import cats.syntax.all._
+import cats.effect.Sync
+import cats.effect.std.Random
 
 import java.util.UUID
+import fs2.io.net.Socket
 import fs2.Chunk
 
 case class Fish[F[_]](id: UUID, socket: Socket[F]) {
@@ -16,9 +17,8 @@ case class Fish[F[_]](id: UUID, socket: Socket[F]) {
     s"${adjective} ${noun}"
   }
 
-  def send(message: String): F[Unit] = {
-    socket.write(Chunk.bytes(message.getBytes(Server.charset)))
-  }
+  def send(message: String): F[Unit] =
+    socket.write(Chunk.array(message.getBytes(Server.charset)))
 }
 
 object Fish {
@@ -53,6 +53,9 @@ object Fish {
     "ellipse",
   )
 
+  private def uuid[F[_]: Sync]: F[UUID] =
+    Sync[F].delay(UUID.randomUUID())
+
   def make[F[_]: Sync](socket: Socket[F]): F[Fish[F]] =
-    Sync[F].delay(UUID.randomUUID()).map { uuid => Fish(uuid, socket) }
+    uuid.map(Fish(_, socket))
 }
